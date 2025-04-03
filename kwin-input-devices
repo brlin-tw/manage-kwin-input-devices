@@ -4,17 +4,17 @@
 # Copyright 2024 Amine Hassane <https://gist.github.com/Sporif>
 # SPDX-License-Identifier: LicenseRef-Amine-Hassane-Gist-PseudoLicense
 
-service="org.kde.KWin"
-dbus_path="/org/kde/KWin/InputDevice"
-interface="org.kde.KWin.InputDevice"
-method_get="org.freedesktop.DBus.Properties.Get"
-method_set="org.freedesktop.DBus.Properties.Set"
-
 declare -A devices=(
     ["asus_numpad"]=''
     ["ASUE140D:00 04F3:31B9 Touchpad"]=''
     ["AT Translated Set 2 keyboard"]=''
 )
+
+service="org.kde.KWin"
+dbus_path="/org/kde/KWin/InputDevice"
+interface="org.kde.KWin.InputDevice"
+method_get="org.freedesktop.DBus.Properties.Get"
+method_set="org.freedesktop.DBus.Properties.Set"
 
 find_devices() {
     local dm_interface="org.kde.KWin.InputDeviceManager"
