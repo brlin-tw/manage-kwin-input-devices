@@ -67,12 +67,35 @@ find_devices() {
     done
 }
 
+# Query the input device's enabled status
+#
+# Standard output:
+#
+# * `true`: Input device is enabled
+# * `false`: Input device is not enabled
+#
+# Positional parameters:
+#
+# 1. sysname: The sysfs name of the input device to query status, e.g.: event2
 get_device_status() {
-    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/$1" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice "enabled"
+    local sysname="${1}"; shift
+
+    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice "enabled"
 }
 
+# Set the input device's enabled status
+#
+# Positional parameters:
+#
+# 1. sysname: The sysfs name of the input device to query status, e.g.: event2
+# 2. state: The desired state of the input device to set:
+#     + `true`: Input device is enabled
+#     + `false`: Input device is not enabled
 set_device_status() {
-    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/$1" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice "enabled" "$2"
+    local sysname="${1}"; shift
+    local state="${1}"; shift
+
+    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice "enabled" "${state}"
 }
 
 toggle_device() {
