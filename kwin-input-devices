@@ -93,7 +93,11 @@ toggle_device() {
     set_device_status "$1" "$status"
 }
 
-find_devices
+if ! find_devices; then
+    printf 'Error: Unable to find the input devices to manage.\n' 1>&2
+    exit 2
+fi
+
 if ! check_devices; then
     exit 1
 fi
