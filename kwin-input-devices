@@ -23,6 +23,7 @@ if test "${#}" != 1; then
     exit 1
 fi
 
+# Check existence of the DEVICES_TO_BE_MANAGED input devices in the running system, and, save their corresponding sysfs device name for future usage
 find_devices() {
     for sysname in $("${QDBUS}" org.kde.KWin /org/kde/KWin/InputDevice org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDeviceManager devicesSysNames); do
         name=$("${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice name)
