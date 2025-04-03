@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Manage disable/enable state of input devices under Kwin(works under KDE Wayland)
+#
 # Copyright 2024 Amine Hassane <https://gist.github.com/Sporif>
 # SPDX-License-Identifier: LicenseRef-Amine-Hassane-Gist-PseudoLicense
 
