@@ -182,6 +182,7 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
                     'Error: Unable to query the enabled status of the "%s" input device.\n' \
                     "${sysname}" \
                     1>&2
+                exit 2
             fi
 
             printf '%s: %s\n' "${device}" "${status}"
