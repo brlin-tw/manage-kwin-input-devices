@@ -25,8 +25,39 @@ fi
 
 # Check existence of the DEVICES_TO_BE_MANAGED input devices in the running system, and, save their corresponding sysfs device name for future usage
 find_devices() {
-    for sysname in $("${QDBUS}" org.kde.KWin /org/kde/KWin/InputDevice org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDeviceManager devicesSysNames); do
-        name=$("${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice name)
+    local sysnames_raw
+    if ! sysnames_raw="$(
+        "${QDBUS}" \
+            org.kde.KWin \
+            /org/kde/KWin/InputDevice \
+            org.freedesktop.DBus.Properties.Get \
+            org.kde.KWin.InputDeviceManager \
+            devicesSysNames
+        )"; then
+        printf 'Error: Unable to query the sysfs names of the kwin input devices.\n' 1>&2
+        return 1
+    fi
+
+    if ! mapfile -t sysnames <<<"${sysnames_raw}"; then
+        printf 'Error: Unable to load the sysnames array.\n' 1>&2
+        return 1
+    fi
+
+    for sysname in "${sysnames[@]}"; do
+        if ! name="$(
+            "${QDBUS}" \
+                org.kde.KWin \
+                "/org/kde/KWin/InputDevice/${sysname}" \
+                org.freedesktop.DBus.Properties.Get \
+                org.kde.KWin.InputDevice \
+                name
+            )"; then
+            printf \
+                'Error: Unable to query the display name of the "%s" input device.\n' \
+                "${sysname}" \
+                1>&2
+            return 1
+        fi
 
         for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
             if [ "$name" == "$device" ]; then
