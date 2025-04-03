@@ -10,6 +10,11 @@ declare -A devices=(
     ["AT Translated Set 2 keyboard"]=''
 )
 
+if ! set -eE; then
+    printf 'Error: Unable to configure error handling.\n' 1>&2
+    exit 2
+fi
+
 service="org.kde.KWin"
 dbus_path="/org/kde/KWin/InputDevice"
 interface="org.kde.KWin.InputDevice"
@@ -64,6 +69,9 @@ fi
 
 for device in "${!devices[@]}"; do
     sysname=${devices["$device"]}
+    if test -z "${sysname}"; then
+        continue
+    fi
     case "$1" in
         "enable") set_device_status "$sysname" true ;;
         "disable") set_device_status "$sysname" false ;;
