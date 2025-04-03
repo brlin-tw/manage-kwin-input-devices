@@ -142,12 +142,13 @@ if ! find_devices; then
     exit 2
 fi
 
+operation_mode="${1}"
 for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
     sysname=${DEVICES_TO_BE_MANAGED["$device"]}
     if test -z "${sysname}"; then
         continue
     fi
-    case "$1" in
+    case "${operation_mode}" in
         enable)
             if ! set_device_status "$sysname" true; then
                 printf \
@@ -186,7 +187,7 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
             printf '%s: %s\n' "${device}" "${status}"
         ;;
         *)
-            printf 'Error: Unsupported operation mode "%s".\n' "$1" 1>&2
+            printf 'Error: Unsupported operation mode "%s".\n' "${operation_mode}" 1>&2
             exit 1
         ;;
     esac
