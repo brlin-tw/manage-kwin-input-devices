@@ -1,6 +1,6 @@
 # kwin-input-devices
 
-Manage disable/enable state of input devices under Kwin(works under KDE Wayland)
+Manage the disable/enable state of input devices under Kwin(works under KDE Wayland)
 
 ## Licensing
 
