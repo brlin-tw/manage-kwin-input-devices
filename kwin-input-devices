@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2024 Amine Hassane <https://gist.github.com/Sporif>
+# SPDX-License-Identifier: LicenseRef-Amine-Hassane-Gist-PseudoLicense
 
 SERVICE="org.kde.KWin"
 DBUS_PATH="/org/kde/KWin/InputDevice"
