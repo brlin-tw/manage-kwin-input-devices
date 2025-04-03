@@ -15,6 +15,12 @@ if ! set -eE; then
     exit 2
 fi
 
+script_basecommand="${0}"
+if test "${#}" != 1; then
+    printf 'Usage: %s _operation_mode_\n' "${script_basecommand}" 1>&2
+    exit 1
+fi
+
 service="org.kde.KWin"
 dbus_path="/org/kde/KWin/InputDevice"
 interface="org.kde.KWin.InputDevice"
