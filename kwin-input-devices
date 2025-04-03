@@ -98,10 +98,43 @@ set_device_status() {
     "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice "enabled" "${state}"
 }
 
+# Enable the specified input device if it's not enabled, and vice versa
+# Positional parameters:
+#
+# 1. sysname: The sysfs name of the input device to query status, e.g.: event2
 toggle_device() {
-    status=$(get_device_status "$1")
-    status=$([[ "$status" == "false" ]] && echo true || echo false)
-    set_device_status "$1" "$status"
+    local sysname="${1}"; shift
+
+    if ! status="$(get_device_status "${sysname}")"; then
+        printf 'Error: Unable to query the enabled status of the "%s" input device.' "${sysname}" 1>&2
+        return 1
+    fi
+
+    case "${status}" in
+        true)
+            new_status=false
+        ;;
+        false)
+            new_status=true
+        ;;
+        *)
+            printf \
+                '%s: Error: Unsupported value of the status variable(%s)\n.' \
+                "${FUNCNAME[0]}" \
+                "${status}" \
+                1>&2
+            exit 99
+        ;;
+    esac
+
+    if ! set_device_status "${sysname}" "${new_status}"; then
+        printf \
+            'Error: Unable to set the new status(%s) of the "%s" input device.\n' \
+            "${new_status}" \
+            "${sysname}" \
+            1>&2
+        return 1
+    fi
 }
 
 if ! find_devices; then
