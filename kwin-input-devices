@@ -148,10 +148,43 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
         continue
     fi
     case "$1" in
-        enable) set_device_status "$sysname" true ;;
-        disable) set_device_status "$sysname" false ;;
-        toggle) toggle_device "$sysname" ;;
-        status) echo "$device: $(get_device_status "$sysname" )" ;;
+        enable)
+            if ! set_device_status "$sysname" true; then
+                printf \
+                    'Error: Unable to enable the "%s" input device.\n' \
+                    "${sysname}" \
+                    1>&2
+                exit 2
+            fi
+        ;;
+        disable)
+            if ! set_device_status "$sysname" false; then
+                printf \
+                    'Error: Unable to disable the "%s" input device.\n' \
+                    "${sysname}" \
+                    1>&2
+                exit 2
+            fi
+        ;;
+        toggle)
+            if ! toggle_device "$sysname"; then
+                printf \
+                    'Error: Unable to toggle the enabled status of the "%s" input device.\n' \
+                    "${sysname}" \
+                    1>&2
+                exit 2
+            fi
+        ;;
+        status)
+            if ! status="$(get_device_status "$sysname")"; then
+                printf \
+                    'Error: Unable to query the enabled status of the "%s" input device.\n' \
+                    "${sysname}" \
+                    1>&2
+            fi
+
+            printf '%s: %s\n' "${device}" "${status}"
+        ;;
         *)
             printf 'Error: Unsupported operation mode "%s".\n' "$1" 1>&2
             exit 1
