@@ -3,6 +3,7 @@
 #
 # Copyright 2024 Amine Hassane <https://gist.github.com/Sporif>
 # SPDX-License-Identifier: LicenseRef-Amine-Hassane-Gist-PseudoLicense
+QDBUS="${QDBUS:-qdbus6}"
 
 declare -A devices=(
     ["asus_numpad"]=''
@@ -31,8 +32,8 @@ find_devices() {
     local dm_interface="org.kde.KWin.InputDeviceManager"
     local dm_property="devicesSysNames"
 
-    for sysname in $(qdbus6 "$service" "$dbus_path" "$method_get" "$dm_interface" "$dm_property"); do
-        name=$(qdbus6 "$service" "${dbus_path}/${sysname}" "$method_get" "$interface" name)
+    for sysname in $("${QDBUS}" "$service" "$dbus_path" "$method_get" "$dm_interface" "$dm_property"); do
+        name=$("${QDBUS}" "$service" "${dbus_path}/${sysname}" "$method_get" "$interface" name)
 
         for device in "${!devices[@]}"; do
             if [ "$name" == "$device" ]; then
@@ -55,11 +56,11 @@ check_devices() {
 }
 
 get_device_status() {
-    qdbus6 "$service" "${dbus_path}/$1" "$method_get" "$interface" "enabled"
+    "${QDBUS}" "$service" "${dbus_path}/$1" "$method_get" "$interface" "enabled"
 }
 
 set_device_status() {
-    qdbus6 "$service" "${dbus_path}/$1" "$method_set" "$interface" "enabled" "$2"
+    "${QDBUS}" "$service" "${dbus_path}/$1" "$method_set" "$interface" "enabled" "$2"
 }
 
 toggle_device() {
