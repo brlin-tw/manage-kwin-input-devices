@@ -67,18 +67,6 @@ find_devices() {
     done
 }
 
-check_devices() {
-    local return_code=0
-    for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
-        sysname=${DEVICES_TO_BE_MANAGED["$device"]}
-        if [ -z "$device" ]; then
-            echo "Failed to find device ($device)"
-            return_code=1
-        fi
-    done
-    return "$return_code"
-}
-
 get_device_status() {
     "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/$1" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice "enabled"
 }
@@ -96,10 +84,6 @@ toggle_device() {
 if ! find_devices; then
     printf 'Error: Unable to find the input devices to manage.\n' 1>&2
     exit 2
-fi
-
-if ! check_devices; then
-    exit 1
 fi
 
 for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
