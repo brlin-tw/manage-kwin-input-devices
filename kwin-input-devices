@@ -68,6 +68,6 @@ for device in "${!devices[@]}"; do
         "enable") set_device_status "$sysname" true ;;
         "disable") set_device_status "$sysname" false ;;
         "toggle") toggle_device "$sysname" ;;
-        "status") echo "$device: $(get_device_status "$sysname" )"
+        "status") echo "$device: $(get_device_status "$sysname" )" ;;
     esac
 done
