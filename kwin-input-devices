@@ -80,7 +80,7 @@ find_devices() {
 get_device_status() {
     local sysname="${1}"; shift
 
-    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice "enabled"
+    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice enabled
 }
 
 # Set the input device's enabled status
@@ -95,7 +95,7 @@ set_device_status() {
     local sysname="${1}"; shift
     local state="${1}"; shift
 
-    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice "enabled" "${state}"
+    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice enabled "${state}"
 }
 
 # Enable the specified input device if it's not enabled, and vice versa
@@ -148,10 +148,10 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
         continue
     fi
     case "$1" in
-        "enable") set_device_status "$sysname" true ;;
-        "disable") set_device_status "$sysname" false ;;
-        "toggle") toggle_device "$sysname" ;;
-        "status") echo "$device: $(get_device_status "$sysname" )" ;;
+        enable) set_device_status "$sysname" true ;;
+        disable) set_device_status "$sysname" false ;;
+        toggle) toggle_device "$sysname" ;;
+        status) echo "$device: $(get_device_status "$sysname" )" ;;
         *)
             printf 'Error: Unsupported operation mode "%s".\n' "$1" 1>&2
             exit 1
