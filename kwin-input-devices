@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: LicenseRef-Amine-Hassane-Gist-PseudoLicense
 QDBUS="${QDBUS:-qdbus6}"
 
-declare -A devices=(
+declare -A DEVICES_TO_BE_MANAGED=(
     ["asus_numpad"]=''
     ["ASUE140D:00 04F3:31B9 Touchpad"]=''
     ["AT Translated Set 2 keyboard"]=''
@@ -35,9 +35,9 @@ find_devices() {
     for sysname in $("${QDBUS}" "$service" "$dbus_path" "$method_get" "$dm_interface" "$dm_property"); do
         name=$("${QDBUS}" "$service" "${dbus_path}/${sysname}" "$method_get" "$interface" name)
 
-        for device in "${!devices[@]}"; do
+        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
             if [ "$name" == "$device" ]; then
-                devices["$device"]="$sysname"
+                DEVICES_TO_BE_MANAGED["$device"]="$sysname"
             fi
         done
     done
@@ -45,8 +45,8 @@ find_devices() {
 
 check_devices() {
     local return_code=0
-    for device in "${!devices[@]}"; do
-        sysname=${devices["$device"]}
+    for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
+        sysname=${DEVICES_TO_BE_MANAGED["$device"]}
         if [ -z "$device" ]; then
             echo "Failed to find device ($device)"
             return_code=1
@@ -74,8 +74,8 @@ if ! check_devices; then
     exit 1
 fi
 
-for device in "${!devices[@]}"; do
-    sysname=${devices["$device"]}
+for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
+    sysname=${DEVICES_TO_BE_MANAGED["$device"]}
     if test -z "${sysname}"; then
         continue
     fi
