@@ -67,6 +67,52 @@ find_devices() {
     done
 }
 
+# List input devices managed by kwin
+list_devices() {
+    local sysnames_raw
+    if ! sysnames_raw="$(
+        "${QDBUS}" \
+            org.kde.KWin \
+            /org/kde/KWin/InputDevice \
+            org.freedesktop.DBus.Properties.Get \
+            org.kde.KWin.InputDeviceManager \
+            devicesSysNames
+        )"; then
+        printf 'Error: Unable to query the sysfs names of the kwin input devices.\n' 1>&2
+        return 1
+    fi
+
+    if ! mapfile -t sysnames <<<"${sysnames_raw}"; then
+        printf 'Error: Unable to load the sysnames array.\n' 1>&2
+        return 1
+    fi
+
+    printf 'enabled?\tsysfs name\t"display name"\n'
+    for sysname in "${sysnames[@]}"; do
+        if ! name="$(
+            "${QDBUS}" \
+                org.kde.KWin \
+                "/org/kde/KWin/InputDevice/${sysname}" \
+                org.freedesktop.DBus.Properties.Get \
+                org.kde.KWin.InputDevice \
+                name
+            )"; then
+            printf \
+                'Error: Unable to query the display name of the "%s" input device.\n' \
+                "${sysname}" \
+                1>&2
+            return 1
+        fi
+
+        if ! status="$(get_device_status "${sysname}")"; then
+            printf 'Error: Unable to query the enabled status of the "%s" input device.' "${sysname}" 1>&2
+            return 1
+        fi
+
+        printf '%s\t\t%s\t\t"%s"\n' "${status}" "${sysname}" "${name}"
+    done
+}
+
 # Query the input device's enabled status
 #
 # Standard output:
@@ -143,13 +189,14 @@ if ! find_devices; then
 fi
 
 operation_mode="${1}"
-for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
-    sysname=${DEVICES_TO_BE_MANAGED["$device"]}
-    if test -z "${sysname}"; then
-        continue
-    fi
-    case "${operation_mode}" in
-        enable)
+case "${operation_mode}" in
+    enable)
+        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
+            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
+            if test -z "${sysname}"; then
+                continue
+            fi
+
             if ! set_device_status "$sysname" true; then
                 printf \
                     'Error: Unable to enable the "%s" input device.\n' \
@@ -157,8 +204,15 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
                     1>&2
                 exit 2
             fi
-        ;;
-        disable)
+        done
+    ;;
+    disable)
+        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
+            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
+            if test -z "${sysname}"; then
+                continue
+            fi
+
             if ! set_device_status "$sysname" false; then
                 printf \
                     'Error: Unable to disable the "%s" input device.\n' \
@@ -166,8 +220,15 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
                     1>&2
                 exit 2
             fi
-        ;;
-        toggle)
+        done
+    ;;
+    toggle)
+        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
+            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
+            if test -z "${sysname}"; then
+                continue
+            fi
+
             if ! toggle_device "$sysname"; then
                 printf \
                     'Error: Unable to toggle the enabled status of the "%s" input device.\n' \
@@ -175,8 +236,15 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
                     1>&2
                 exit 2
             fi
-        ;;
-        status)
+        done
+    ;;
+    status)
+        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
+            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
+            if test -z "${sysname}"; then
+                continue
+            fi
+
             if ! status="$(get_device_status "$sysname")"; then
                 printf \
                     'Error: Unable to query the enabled status of the "%s" input device.\n' \
@@ -186,12 +254,20 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
             fi
 
             printf '%s: %s\n' "${device}" "${status}"
-        ;;
-        *)
-            printf 'Error: Unsupported operation mode "%s".\n' "${operation_mode}" 1>&2
-            exit 1
-        ;;
-    esac
-done
+        done
+    ;;
+    list)
+        if ! list_devices; then
+            printf \
+                'Error: Unable to list kwin-managed input devices.\n' \
+                1>&2
+            exit 2
+        fi
+    ;;
+    *)
+        printf 'Error: Unsupported operation mode "%s".\n' "${operation_mode}" 1>&2
+        exit 1
+    ;;
+esac
 
 printf 'Info: Operation completed without errors.\n'
