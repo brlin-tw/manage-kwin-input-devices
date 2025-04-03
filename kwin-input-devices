@@ -192,3 +192,5 @@ for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
         ;;
     esac
 done
+
+printf 'Info: Operation completed without errors.\n'
