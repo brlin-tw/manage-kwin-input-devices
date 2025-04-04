@@ -279,6 +279,9 @@ is_input_device_sysfs_name(){
 enable_device(){
     local device="${1}"; shift
 
+    printf \
+        'Info: Enabling the "%s" input device...\n' \
+        "${device}"
     if ! is_input_device_sysfs_name "${device}"; then
         if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
             printf \
@@ -321,6 +324,9 @@ enable_device(){
 disable_device(){
     local device="${1}"; shift
 
+    printf \
+        'Info: Disabling the "%s" input device...\n' \
+        "${device}"
     if ! is_input_device_sysfs_name "${device}"; then
         if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
             printf \
