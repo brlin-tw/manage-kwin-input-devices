@@ -25,7 +25,7 @@
 
 QDBUS="${QDBUS:-qdbus6}"
 
-if ! set -eE; then
+if ! set -eEu; then
     printf 'Error: Unable to configure error handling.\n' 1>&2
     exit 2
 fi
