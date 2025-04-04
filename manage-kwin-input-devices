@@ -261,6 +261,23 @@ toggle_device() {
     fi
 }
 
+# Determine whether the supplied string is a sysfs name of a input device
+#
+# Return values:
+#
+# * 0: Is sysfs name
+# * 1: Not sysfs name
+is_input_device_sysfs_name(){
+    local device="${1}"; shift
+
+    local regex_sysfs_names='^event[[:digit:]]+$'
+    if [[ "${device}" =~ ${regex_sysfs_names} ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Enable a input device by its sysfs name or its display name
 #
 # Return values:
@@ -270,9 +287,7 @@ toggle_device() {
 enable_device(){
     local device="${1}"; shift
 
-    local regex_sysfs_names='^event[[:digit:]]+$'
-
-    if ! [[ "${device}" =~ ${regex_sysfs_names} ]]; then
+    if ! is_input_device_sysfs_name "${device}"; then
         if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
             printf \
                 'Error: Unable to query the sysfs name of the "%s" input device.\n' \
