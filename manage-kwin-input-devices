@@ -601,7 +601,7 @@ case "${operation_mode}" in
         if test "${#devices[@]}" -eq 1; then
             device="${devices[0]}"
             if ! enabled="$(is_input_device_enabled "${device}")"; then
-                printf 'Error: Unable to query the enabled status of the "%s" input device.' "${enabled}" 1>&2
+                printf 'Error: Unable to query the enabled status of the "%s" input device.\n' "${device}" 1>&2
                 exit 2
             fi
 
@@ -614,7 +614,7 @@ case "${operation_mode}" in
         else
             for device in "${devices[@]}"; do
                 if ! enabled="$(is_input_device_enabled "${device}")"; then
-                    printf 'Error: Unable to query the enabled status of the "%s" input device.' "${enabled}" 1>&2
+                    printf 'Error: Unable to query the enabled status of the "%s" input device.\n' "${device}" 1>&2
                     exit 2
                 fi
 
