@@ -144,6 +144,70 @@ list_devices() {
     done
 }
 
+# Determine whether the specified input device exists
+#
+# Standard output:
+#
+# * "true": The input device is enabled
+# * "false": The input device is not enabled
+#
+# Return values:
+#
+# * 0: Operation successful
+# * 2: Generic error
+is_input_device_exists(){
+    local device="${1}"; shift
+
+    local sysfs_name
+    if ! is_input_device_sysfs_name "${device}"; then
+        if ! sysfs_name="$(get_input_device_sysfs_name "${device}")" \
+            && test "${?}" -eq 1; then
+            printf \
+                'Error: Unable to query the sysfs name of the "%s" input device.\n' \
+                "${device}" \
+                1>&2
+            return 2
+        fi
+
+        if test -z "${sysfs_name}"; then
+            printf 'false\n'
+            return 0
+        else
+            printf 'true\n'
+            return 0
+        fi
+    else
+        sysfs_name="${device}"
+
+        local sysnames_raw
+        if ! sysnames_raw="$(
+            "${QDBUS:-qdbus}" \
+                org.kde.KWin \
+                /org/kde/KWin/InputDevice \
+                org.freedesktop.DBus.Properties.Get \
+                org.kde.KWin.InputDeviceManager \
+                devicesSysNames
+            )"; then
+            printf 'Error: Unable to query the sysfs names of the kwin input devices.\n' 1>&2
+            return 1
+        fi
+
+        if ! mapfile -t sysnames <<<"${sysnames_raw}"; then
+            printf 'Error: Unable to load the sysnames array.\n' 1>&2
+            return 1
+        fi
+
+        for name in "${sysnames[@]}"; do
+            if test "${name}" == "${sysfs_name}"; then
+                printf 'true\n'
+                return 0
+            fi
+        done
+        printf 'false\n'
+        return 0
+    fi
+}
+
 # Determine whether the specified input device is enabled
 #
 # Standard output:
