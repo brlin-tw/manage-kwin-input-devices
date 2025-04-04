@@ -47,7 +47,7 @@ fi
 find_devices() {
     local sysnames_raw
     if ! sysnames_raw="$(
-        "${QDBUS}" \
+        "${QDBUS:-qdbus}" \
             org.kde.KWin \
             /org/kde/KWin/InputDevice \
             org.freedesktop.DBus.Properties.Get \
@@ -65,7 +65,7 @@ find_devices() {
 
     for sysname in "${sysnames[@]}"; do
         if ! name="$(
-            "${QDBUS}" \
+            "${QDBUS:-qdbus}" \
                 org.kde.KWin \
                 "/org/kde/KWin/InputDevice/${sysname}" \
                 org.freedesktop.DBus.Properties.Get \
@@ -91,7 +91,7 @@ find_devices() {
 list_devices() {
     local sysnames_raw
     if ! sysnames_raw="$(
-        "${QDBUS}" \
+        "${QDBUS:-qdbus}" \
             org.kde.KWin \
             /org/kde/KWin/InputDevice \
             org.freedesktop.DBus.Properties.Get \
@@ -110,7 +110,7 @@ list_devices() {
     printf 'enabled?\tsysfs name\t"display name"\n'
     for sysname in "${sysnames[@]}"; do
         if ! name="$(
-            "${QDBUS}" \
+            "${QDBUS:-qdbus}" \
                 org.kde.KWin \
                 "/org/kde/KWin/InputDevice/${sysname}" \
                 org.freedesktop.DBus.Properties.Get \
@@ -147,7 +147,7 @@ list_devices() {
 get_device_status() {
     local sysname="${1}"; shift
 
-    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice enabled
+    "${QDBUS:-qdbus}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice enabled
 }
 
 # Set the input device's enabled status
@@ -162,7 +162,7 @@ set_device_status() {
     local sysname="${1}"; shift
     local state="${1}"; shift
 
-    "${QDBUS}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice enabled "${state}"
+    "${QDBUS:-qdbus}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice enabled "${state}"
 }
 
 # Enable the specified input device if it's not enabled, and vice versa
