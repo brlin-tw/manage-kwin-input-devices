@@ -202,21 +202,6 @@ is_input_device_enabled(){
     esac
 }
 
-# Set the input device's enabled status
-#
-# Positional parameters:
-#
-# 1. sysname: The sysfs name of the input device to query status, e.g.: event2
-# 2. state: The desired state of the input device to set:
-#     + `true`: Input device is enabled
-#     + `false`: Input device is not enabled
-set_device_status() {
-    local sysname="${1}"; shift
-    local state="${1}"; shift
-
-    "${QDBUS:-qdbus}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice enabled "${state}"
-}
-
 # Enable the specified input device if it's not enabled, and vice versa.
 #
 # Return values:
@@ -283,6 +268,10 @@ is_input_device_sysfs_name(){
 
 # Enable a input device by its sysfs name or its display name
 #
+# Environment variables:
+#
+# * QDBUS: The qdbus-like command to use.
+#
 # Return values:
 #
 # * 0: Operation successful
@@ -302,7 +291,13 @@ enable_device(){
         sysfs_name="${device}"
     fi
 
-    if ! set_device_status "${sysfs_name}" true; then
+    if ! "${QDBUS:-qdbus}" \
+        org.kde.KWin \
+        "/org/kde/KWin/InputDevice/${sysname}" \
+        org.freedesktop.DBus.Properties.Set \
+            org.kde.KWin.InputDevice \
+            enabled \
+            true; then
         printf \
             'Error: Unable to enable the "%s" input device.\n' \
             "${device}" \
@@ -314,6 +309,10 @@ enable_device(){
 }
 
 # Disable a input device by its sysfs name or its display name
+#
+# Environment variables:
+#
+# * QDBUS: The qdbus-like command to use.
 #
 # Return values:
 #
@@ -334,7 +333,13 @@ disable_device(){
         sysfs_name="${device}"
     fi
 
-    if ! set_device_status "${sysfs_name}" false; then
+    if ! "${QDBUS:-qdbus}" \
+        org.kde.KWin \
+        "/org/kde/KWin/InputDevice/${sysname}" \
+        org.freedesktop.DBus.Properties.Set \
+            org.kde.KWin.InputDevice \
+            enabled \
+            false; then
         printf \
             'Error: Unable to disable the "%s" input device.\n' \
             "${device}" \
