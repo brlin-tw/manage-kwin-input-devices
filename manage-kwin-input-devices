@@ -261,6 +261,40 @@ toggle_device() {
     fi
 }
 
+# Enable a input device by its sysfs name or its display name
+#
+# Return values:
+#
+# * 0: Operation successful
+# * 2: Generic error
+enable_device(){
+    local device="${1}"; shift
+
+    local regex_sysfs_names='^event[[:digit:]]+$'
+
+    if ! [[ "${device}" =~ ${regex_sysfs_names} ]]; then
+        if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
+            printf \
+                'Error: Unable to query the sysfs name of the "%s" input device.\n' \
+                "${device}" \
+                1>&2
+            return 2
+        fi
+    else
+        sysfs_name="${device}"
+    fi
+
+    if ! set_device_status "${sysfs_name}" true; then
+        printf \
+            'Error: Unable to enable the "%s" input device.\n' \
+            "${device}" \
+            1>&2
+        return 2
+    fi
+
+    return 0
+}
+
 if ! find_devices; then
     printf 'Error: Unable to find the input devices to manage.\n' 1>&2
     exit 2
