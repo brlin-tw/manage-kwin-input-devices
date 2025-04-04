@@ -129,7 +129,8 @@ list_devices() {
             return 1
         fi
 
-        printf '%s\t\t%s\t\t"%s"\n' "${status}" "${sysname}" "${name}"
+        # NOTE: The bash built-in printf doesn't not print pretty quoted strings, use the one from coreutils instead.
+        env printf '%s\t\t%s\t\t%q\n' "${status}" "${sysname}" "${name}"
     done
 }
 
