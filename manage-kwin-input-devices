@@ -25,21 +25,14 @@
 
 QDBUS="${QDBUS:-qdbus6}"
 
-declare -A DEVICES_TO_BE_MANAGED=(
-    ["asus_numpad"]=''
-    ["ASUE140D:00 04F3:31B9 Touchpad"]=''
-    ["AT Translated Set 2 keyboard"]=''
-    ["PIXA3854:00 093A:0274 Touchpad"]=''
-)
-
 if ! set -eE; then
     printf 'Error: Unable to configure error handling.\n' 1>&2
     exit 2
 fi
 
 script_basecommand="${0}"
-if test "${#}" != 1; then
-    printf 'Usage: %s _operation_mode_\n' "${script_basecommand}" 1>&2
+if test "${#}" -lt 1; then
+    printf 'Usage: %s _operation_mode_ _operation_args_...\n' "${script_basecommand}" 1>&2
     exit 1
 fi
 
@@ -100,50 +93,6 @@ get_input_device_sysfs_name(){
     return 2
 }
 
-# Check existence of the DEVICES_TO_BE_MANAGED input devices in the running system, and, save their corresponding sysfs device name for future usage
-find_devices() {
-    local sysnames_raw
-    if ! sysnames_raw="$(
-        "${QDBUS:-qdbus}" \
-            org.kde.KWin \
-            /org/kde/KWin/InputDevice \
-            org.freedesktop.DBus.Properties.Get \
-            org.kde.KWin.InputDeviceManager \
-            devicesSysNames
-        )"; then
-        printf 'Error: Unable to query the sysfs names of the kwin input devices.\n' 1>&2
-        return 1
-    fi
-
-    if ! mapfile -t sysnames <<<"${sysnames_raw}"; then
-        printf 'Error: Unable to load the sysnames array.\n' 1>&2
-        return 1
-    fi
-
-    for sysname in "${sysnames[@]}"; do
-        if ! name="$(
-            "${QDBUS:-qdbus}" \
-                org.kde.KWin \
-                "/org/kde/KWin/InputDevice/${sysname}" \
-                org.freedesktop.DBus.Properties.Get \
-                org.kde.KWin.InputDevice \
-                name
-            )"; then
-            printf \
-                'Error: Unable to query the display name of the "%s" input device.\n' \
-                "${sysname}" \
-                1>&2
-            return 1
-        fi
-
-        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
-            if [ "$name" == "$device" ]; then
-                DEVICES_TO_BE_MANAGED["$device"]="$sysname"
-            fi
-        done
-    done
-}
-
 # List input devices managed by kwin
 list_devices() {
     local sysnames_raw
@@ -181,30 +130,72 @@ list_devices() {
             return 1
         fi
 
-        if ! status="$(get_device_status "${sysname}")"; then
+        if ! enabled="$(is_input_device_enabled "${sysname}")"; then
             printf 'Error: Unable to query the enabled status of the "%s" input device.' "${sysname}" 1>&2
             return 1
         fi
 
         # NOTE: The bash built-in printf doesn't not print pretty quoted strings, use the one from coreutils instead.
-        env printf '%s\t\t%s\t\t%q\n' "${status}" "${sysname}" "${name}"
+        env printf '%s\t\t%s\t\t%q\n' "${enabled}" "${sysname}" "${name}"
     done
 }
 
-# Query the input device's enabled status
+# Determine whether the specified input device is enabled
 #
 # Standard output:
 #
-# * `true`: Input device is enabled
-# * `false`: Input device is not enabled
+# * "true": The input device is enabled
+# * "false": The input device is not enabled
 #
-# Positional parameters:
+# Return values:
 #
-# 1. sysname: The sysfs name of the input device to query status, e.g.: event2
-get_device_status() {
-    local sysname="${1}"; shift
+# * 0: Operation successful
+# * 2: Generic error
+is_input_device_enabled(){
+    local device="${1}"; shift
 
-    "${QDBUS:-qdbus}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Get org.kde.KWin.InputDevice enabled
+    local sysfs_name
+    if ! is_input_device_sysfs_name "${device}"; then
+        if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
+            printf \
+                'Error: Unable to query the sysfs name of the "%s" input device.\n' \
+                "${device}" \
+                1>&2
+            return 2
+        fi
+    else
+        sysfs_name="${device}"
+    fi
+
+    local result
+    if ! result="$(
+        "${QDBUS:-qdbus}" \
+            org.kde.KWin \
+            "/org/kde/KWin/InputDevice/${sysfs_name}" \
+            org.freedesktop.DBus.Properties.Get \
+                org.kde.KWin.InputDevice \
+                enabled
+        )"; then
+        printf \
+            'Error: Unable to call the qdbus command to query the enabled status for the "%s" input device.\n' \
+            "${device}" \
+            1>&2
+        return 2
+    fi
+
+    case "${result}" in
+        true|false)
+            # Result is the same so simply echo them
+            printf '%s' "${result}"
+        ;;
+        *)
+            printf \
+                'Error: Unexpected output(%s) from the dbus call.\n' \
+                "${result}" \
+                1>&2
+            return 2
+        ;;
+    esac
 }
 
 # Set the input device's enabled status
@@ -222,43 +213,51 @@ set_device_status() {
     "${QDBUS:-qdbus}" org.kde.KWin "/org/kde/KWin/InputDevice/${sysname}" org.freedesktop.DBus.Properties.Set org.kde.KWin.InputDevice enabled "${state}"
 }
 
-# Enable the specified input device if it's not enabled, and vice versa
-# Positional parameters:
+# Enable the specified input device if it's not enabled, and vice versa.
 #
-# 1. sysname: The sysfs name of the input device to query status, e.g.: event2
+# Return values:
+#
+# * 0: Operation successful.
+# * 2: Generic error.
 toggle_device() {
-    local sysname="${1}"; shift
+    # The sysfs or display name of the input device to toggle the enabled status, e.g.: event2
+    local device="${1}"; shift
 
-    if ! status="$(get_device_status "${sysname}")"; then
-        printf 'Error: Unable to query the enabled status of the "%s" input device.' "${sysname}" 1>&2
-        return 1
+    local enabled
+    if ! enabled="$(is_input_device_enabled "${device}")"; then
+        printf 'Error: Unable to query the enabled status of the "%s" input device.' "${device}" 1>&2
+        return 2
     fi
 
-    case "${status}" in
+    case "${enabled}" in
         true)
-            new_status=false
+            if ! disable_device "${device}"; then
+                printf \
+                    'Error: Unable to disable the "%s" device.\n' \
+                    "${device}" \
+                    1>&2
+                return 2
+            fi
         ;;
         false)
-            new_status=true
+            if ! enable_device "${device}"; then
+                printf \
+                    'Error: Unable to enable the "%s" device.\n' \
+                    "${device}" \
+                    1>&2
+                return 2
+            fi
         ;;
         *)
             printf \
-                '%s: Error: Unsupported value of the status variable(%s)\n.' \
+                '%s: FATAL: Unsupported value of the enabled variable(%s)\n.' \
                 "${FUNCNAME[0]}" \
-                "${status}" \
+                "${enabled}" \
                 1>&2
             exit 99
         ;;
     esac
-
-    if ! set_device_status "${sysname}" "${new_status}"; then
-        printf \
-            'Error: Unable to set the new status(%s) of the "%s" input device.\n' \
-            "${new_status}" \
-            "${sysname}" \
-            1>&2
-        return 1
-    fi
+    return 0
 }
 
 # Determine whether the supplied string is a sysfs name of a input device
@@ -342,78 +341,121 @@ disable_device(){
     return 0
 }
 
-if ! find_devices; then
-    printf 'Error: Unable to find the input devices to manage.\n' 1>&2
-    exit 2
-fi
-
 operation_mode="${1}"; shift 1
 case "${operation_mode}" in
     enable)
-        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
-            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
-            if test -z "${sysname}"; then
-                continue
-            fi
+        if test "${#}" -eq 0; then
+            printf \
+                'Usage: %s enable _input_device_...\n' \
+                "${script_basecommand}" \
+                1>&2
+            printf \
+                '\n_input_device_ can be its sysfs name or display name.\n' \
+                1>&2
+            exit 1
+        fi
 
-            if ! set_device_status "$sysname" true; then
+        devices=("${@}")
+        for device in "${devices[@]}"; do
+            if ! enable_device "${device}"; then
                 printf \
                     'Error: Unable to enable the "%s" input device.\n' \
-                    "${sysname}" \
+                    "${device}" \
                     1>&2
                 exit 2
             fi
         done
     ;;
     disable)
-        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
-            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
-            if test -z "${sysname}"; then
-                continue
-            fi
+        if test "${#}" -eq 0; then
+            printf \
+                'Usage: %s disable _input_device_...\n' \
+                "${script_basecommand}" \
+                1>&2
+            printf \
+                '\n_input_device_ can be its sysfs name or display name.\n' \
+                1>&2
+            exit 1
+        fi
 
-            if ! set_device_status "$sysname" false; then
+        devices=("${@}")
+        for device in "${devices[@]}"; do
+            if ! disable_device "${device}"; then
                 printf \
                     'Error: Unable to disable the "%s" input device.\n' \
-                    "${sysname}" \
+                    "${device}" \
                     1>&2
                 exit 2
             fi
         done
     ;;
     toggle)
-        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
-            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
-            if test -z "${sysname}"; then
-                continue
-            fi
+        if test "${#}" -eq 0; then
+            printf \
+                'Usage: %s toggle _input_device_...\n' \
+                "${script_basecommand}" \
+                1>&2
+            printf \
+                '\n_input_device_ can be its sysfs name or display name.\n' \
+                1>&2
+            exit 1
+        fi
 
-            if ! toggle_device "$sysname"; then
+        devices=("${@}")
+        for device in "${devices[@]}"; do
+            if ! toggle_device "${device}"; then
                 printf \
-                    'Error: Unable to toggle the enabled status of the "%s" input device.\n' \
-                    "${sysname}" \
+                    'Error: Unable to toggle the enabled state the "%s" input device.\n' \
+                    "${device}" \
                     1>&2
                 exit 2
             fi
         done
     ;;
+    # Display enabled status for specified input device(s)
     status)
-        for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
-            sysname=${DEVICES_TO_BE_MANAGED["$device"]}
-            if test -z "${sysname}"; then
-                continue
-            fi
+        if test "${#}" -eq 0; then
+            printf \
+                'Usage: %s status _input_device_...\n' \
+                "${script_basecommand}" \
+                1>&2
+            printf \
+                '\n_input_device_ can be its sysfs name or display name.\n' \
+                1>&2
+            exit 1
+        fi
 
-            if ! status="$(get_device_status "$sysname")"; then
-                printf \
-                    'Error: Unable to query the enabled status of the "%s" input device.\n' \
-                    "${sysname}" \
-                    1>&2
+        enabled=
+        devices=("${@}")
+        if test "${#devices[@]}" -eq 1; then
+            device="${devices[0]}"
+            if ! enabled="$(is_input_device_enabled "${device}")"; then
+                printf 'Error: Unable to query the enabled status of the "%s" input device.' "${enabled}" 1>&2
                 exit 2
             fi
 
-            printf '%s: %s\n' "${device}" "${status}"
-        done
+            # We only print [enabled|disabled] when only one device is specified for the ease of scripting
+            if test "${enabled}" == true; then
+                printf 'disabled\n'
+            else
+                printf 'enabled\n'
+            fi
+        else
+            for device in "${devices[@]}"; do
+                if ! enabled="$(is_input_device_enabled "${device}")"; then
+                    printf 'Error: Unable to query the enabled status of the "%s" input device.' "${enabled}" 1>&2
+                    exit 2
+                fi
+
+                if ! enabled="$(is_input_device_enabled "${device}")"; then
+                    state=disabled
+                else
+                    state=enabled
+                fi
+
+                printf '%s: %s\n' "${device}" "${state}"
+            done
+        fi
     ;;
     list)
         if ! list_devices; then
@@ -429,4 +471,7 @@ case "${operation_mode}" in
     ;;
 esac
 
-printf 'Info: Operation completed without errors.\n'
+# We really want that output to be parsed easily
+if test "${operation_mode}" != status; then
+    printf 'Info: Operation completed without errors.\n'
+fi

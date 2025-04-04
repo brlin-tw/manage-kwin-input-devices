@@ -1,0 +1,8 @@
+# Device display names to be managed by the utility
+#
+# Copyright 1900 Uncopyrighted work
+# SPDX-License-Identifier: CC0-1.0
+asus_numpad
+ASUE140D:00 04F3:31B9 Touchpad
+AT Translated Set 2 keyboard
+PIXA3854:00 093A:0274 Touchpad
