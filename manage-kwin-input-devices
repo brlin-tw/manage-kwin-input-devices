@@ -468,7 +468,7 @@ case "${operation_mode}" in
             fi
         done
     ;;
-    enable-from-file|disable-from-file)
+    enable-from-file|disable-from-file|toggle-from-file)
         if test "${#}" != 1; then
             printf \
                 'Usage: %s %s _device_list_file_\n' \
@@ -536,6 +536,15 @@ case "${operation_mode}" in
                     if ! disable_device "${device}"; then
                         printf \
                             'Error: Unable to disable the "%s" input device.\n' \
+                            "${device}" \
+                            1>&2
+                        exit 2
+                    fi
+                ;;
+                toggle-from-file)
+                    if ! toggle_device "${device}"; then
+                        printf \
+                            'Error: Unable to toggle the enabled state of the "%s" input device.\n' \
                             "${device}" \
                             1>&2
                         exit 2
