@@ -266,7 +266,7 @@ if ! find_devices; then
     exit 2
 fi
 
-operation_mode="${1}"
+operation_mode="${1}"; shift 1
 case "${operation_mode}" in
     enable)
         for device in "${!DEVICES_TO_BE_MANAGED[@]}"; do
