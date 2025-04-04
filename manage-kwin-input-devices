@@ -293,7 +293,7 @@ enable_device(){
 
     if ! "${QDBUS:-qdbus}" \
         org.kde.KWin \
-        "/org/kde/KWin/InputDevice/${sysname}" \
+        "/org/kde/KWin/InputDevice/${sysfs_name}" \
         org.freedesktop.DBus.Properties.Set \
             org.kde.KWin.InputDevice \
             enabled \
@@ -335,7 +335,7 @@ disable_device(){
 
     if ! "${QDBUS:-qdbus}" \
         org.kde.KWin \
-        "/org/kde/KWin/InputDevice/${sysname}" \
+        "/org/kde/KWin/InputDevice/${sysfs_name}" \
         org.freedesktop.DBus.Properties.Set \
             org.kde.KWin.InputDevice \
             enabled \
