@@ -6,5 +6,9 @@
 # SPDX-License-Identifier: CC0-1.0
 asus_numpad
 ASUE140D:00 04F3:31B9 Touchpad
+
+# Common name for laptop integrated keyboards
 AT Translated Set 2 keyboard
+
+# Touchpad of Framework Laptop 13 (AMD 7040 series and likely others)
 PIXA3854:00 093A:0274 Touchpad
