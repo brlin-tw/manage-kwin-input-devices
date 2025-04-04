@@ -38,7 +38,10 @@ fi
 
 # Query input device's sysfs name from it's display name
 #
-# Environment variables
+# Environment variables:
+#
+# * QDBUS: The qdbus-like external command to call
+#
 # Standard output: Sysfs name of the matched input device
 # Supported return values:
 #
