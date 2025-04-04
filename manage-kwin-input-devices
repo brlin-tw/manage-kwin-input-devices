@@ -468,6 +468,89 @@ case "${operation_mode}" in
             fi
         done
     ;;
+    enable-from-file|disable-from-file)
+        if test "${#}" != 1; then
+            printf \
+                'Usage: %s %s _device_list_file_\n' \
+                "${script_basecommand}" \
+                "${operation_mode}" \
+                1>&2
+            printf \
+                '\nReplace the _device_list_file_ placeholder text to the actual path of the file with the list of devices to be managed.\n' \
+                1>&2
+            exit 1
+        fi
+
+        list_file="${1}"; shift 1
+        if ! test -e "${list_file}"; then
+            printf \
+                'Error: List file "%s" not found.\n' \
+                "${list_file}" \
+                1>&2
+            exit 1
+        fi
+
+        if ! mapfile -t list_file_lines <"${list_file}"; then
+            printf \
+                'Error: Unable to load the list file.\n' \
+                1>&2
+            exit 2
+        fi
+
+        regex_comment_lines='^#'
+        regex_blank_lines='^[[:space:]]*$'
+        devices=()
+        for line in "${list_file_lines[@]}"; do
+            if [[ "${line}" =~ ${regex_comment_lines} ]] \
+                || [[ "${line}" =~ ${regex_blank_lines} ]]; then
+                continue
+            fi
+            devices+=("${line}")
+        done
+
+        for device in "${devices[@]}"; do
+            if ! device_existence="$(is_input_device_exists "${device}")"; then
+                printf \
+                    'Error: Unable to check the existence of the "%s" input device.\n' \
+                    "${device}" \
+                    1>&2
+                exit 2
+            fi
+
+            if test "${device_existence}" == false; then
+                # We don't bail out when device in list doesn't exist as it'll contain device names that don't exist in every system.
+                continue
+            fi
+
+            case "${operation_mode}" in
+                enable-from-file)
+                    if ! enable_device "${device}"; then
+                        printf \
+                            'Error: Unable to enable the "%s" input device.\n' \
+                            "${device}" \
+                            1>&2
+                        exit 2
+                    fi
+                ;;
+                disable-from-file)
+                    if ! disable_device "${device}"; then
+                        printf \
+                            'Error: Unable to disable the "%s" input device.\n' \
+                            "${device}" \
+                            1>&2
+                        exit 2
+                    fi
+                ;;
+                *)
+                    printf \
+                        'FATAL: Unsupported operation mode "%s".\n' \
+                        "${operation_mode}" \
+                        1>&2
+                    exit 99
+                ;;
+            esac
+        done
+    ;;
     toggle)
         if test "${#}" -eq 0; then
             printf \
