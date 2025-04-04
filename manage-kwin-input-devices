@@ -24,6 +24,16 @@
 # THE SOFTWARE.
 
 QDBUS="${QDBUS:-qdbus}"
+BUILTIN_DEVICES_TO_BE_MANAGED=(
+    asus_numpad
+    'ASUE140D:00 04F3:31B9 Touchpad'
+
+    # Common name for laptop integrated keyboards
+    'AT Translated Set 2 keyboard'
+
+    # Touchpad of Framework Laptop 13 (AMD 7040 series and likely others)
+    'PIXA3854:00 093A:0274 Touchpad'
+)
 
 if ! set -eEu; then
     printf 'Error: Unable to configure error handling.\n' 1>&2
@@ -471,42 +481,46 @@ case "${operation_mode}" in
     enable-from-file|disable-from-file|toggle-from-file)
         if test "${#}" != 1; then
             printf \
-                'Usage: %s %s _device_list_file_\n' \
+                'Usage: %s %s [_device_list_file_|"_builtin_"]\n' \
                 "${script_basecommand}" \
                 "${operation_mode}" \
                 1>&2
             printf \
-                '\nReplace the _device_list_file_ placeholder text to the actual path of the file with the list of devices to be managed.\n' \
+                '\nReplace the _device_list_file_ placeholder text to the actual path of the file with the list of devices to be managed, or specify "_builtin_" (literally), to use a built-in list with common values.\n' \
                 1>&2
             exit 1
         fi
 
-        list_file="${1}"; shift 1
-        if ! test -e "${list_file}"; then
-            printf \
-                'Error: List file "%s" not found.\n' \
-                "${list_file}" \
-                1>&2
-            exit 1
-        fi
-
-        if ! mapfile -t list_file_lines <"${list_file}"; then
-            printf \
-                'Error: Unable to load the list file.\n' \
-                1>&2
-            exit 2
-        fi
-
-        regex_comment_lines='^#'
-        regex_blank_lines='^[[:space:]]*$'
         devices=()
-        for line in "${list_file_lines[@]}"; do
-            if [[ "${line}" =~ ${regex_comment_lines} ]] \
-                || [[ "${line}" =~ ${regex_blank_lines} ]]; then
-                continue
+        list_file="${1}"; shift 1
+        if test "${list_file}" == _builtin_; then
+            devices+=("${BUILTIN_DEVICES_TO_BE_MANAGED[@]}")
+        else
+            if ! test -e "${list_file}"; then
+                printf \
+                    'Error: List file "%s" not found.\n' \
+                    "${list_file}" \
+                    1>&2
+                exit 1
             fi
-            devices+=("${line}")
-        done
+
+            if ! mapfile -t list_file_lines <"${list_file}"; then
+                printf \
+                    'Error: Unable to load the list file.\n' \
+                    1>&2
+                exit 2
+            fi
+
+            regex_comment_lines='^#'
+            regex_blank_lines='^[[:space:]]*$'
+            for line in "${list_file_lines[@]}"; do
+                if [[ "${line}" =~ ${regex_comment_lines} ]] \
+                    || [[ "${line}" =~ ${regex_blank_lines} ]]; then
+                    continue
+                fi
+                devices+=("${line}")
+            done
+        fi
 
         for device in "${devices[@]}"; do
             if ! device_existence="$(is_input_device_exists "${device}")"; then
