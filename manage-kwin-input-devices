@@ -116,6 +116,7 @@ list_devices() {
         return 1
     fi
 
+    local status
     printf 'enabled?\tsysfs name\t"display name"\n'
     for sysname in "${sysnames[@]}"; do
         if ! name="$(
