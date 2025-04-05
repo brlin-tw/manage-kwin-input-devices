@@ -7,6 +7,15 @@ A utility to manage the disable/enable state of input devices under Kwin(works u
 
 \#kwin \#kde \#wayland \#device-management \#linux
 
+## Prerequisites
+
+The following are the prerequisites required to run the utility:
+
+* Bash  
+  Provides the runtime environment.
+* qdbus  
+  For operating the kwin_wayland D-Bus service.
+
 ## Usage
 
 Refer to the following instructions to use this utility:
