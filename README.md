@@ -7,6 +7,21 @@ A utility to manage the disable/enable state of input devices under Kwin(works u
 
 \#kwin \#kde \#wayland \#device-management \#linux
 
+## Usage
+
+Refer to the following instructions to use this utility:
+
+1. Acquire the release archive from [the Releases page](https://gitlab.com/brlin/manage-kwin-input-devices/-/releases).
+1. Extract the release archive using an archive manipulation program.
+1. Launch a text terminal.
+1. In the text terminal, run the following command to use the utility:
+
+    ```bash
+    /path/to/manage-kwin-input-devices-X.Y.Z/manage-kwin-input-devices _operation_mode_ _arguments_...
+    ```
+
+   Replace the `/path/to/manage-kwin-input-devices-X.Y.Z/manage-kwin-input-devices`, the `_operation_mode_` and the `_arguments_` placeholder text to their respective values.  Refer to [the manual page](manage-kwin-input-devices.1.md) for more information.
+
 ## Credits
 
 This project is based on [Amine Hassane](https://gist.github.com/Sporif)'s work: [Enable or disable input devices on KDE](https://gist.github.com/Sporif/0e52e4b0eaf071cfbf19f3381ba3d65a).
