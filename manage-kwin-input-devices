@@ -40,7 +40,7 @@ if ! set -eEu; then
     exit 2
 fi
 
-# Query input device's sysfs name from its display name
+# Query input device's kernel name from its display name
 #
 # Environment variables:
 #
@@ -52,11 +52,11 @@ fi
 # * 0: Matching device found
 # * 1: Generic error
 # * 2: No matching device found
-get_input_device_sysfs_name(){
+get_input_device_kernel_name(){
     local display_name="${1}"; shift
 
-    local sysnames_raw
-    if ! sysnames_raw="$(
+    local kernel_names_raw
+    if ! kernel_names_raw="$(
         "${QDBUS:-qdbus}" \
             org.kde.KWin \
             /org/kde/KWin/InputDevice \
@@ -64,34 +64,34 @@ get_input_device_sysfs_name(){
             org.kde.KWin.InputDeviceManager \
             devicesSysNames
         )"; then
-        printf 'Error: Unable to query the sysfs names of the kwin input devices.\n' 1>&2
+        printf 'Error: Unable to query the kernel names of the kwin input devices.\n' 1>&2
         return 1
     fi
 
-    if ! mapfile -t sysnames <<<"${sysnames_raw}"; then
-        printf 'Error: Unable to load the sysnames array.\n' 1>&2
+    if ! mapfile -t kernel_names <<<"${kernel_names_raw}"; then
+        printf 'Error: Unable to load the kernel_names array.\n' 1>&2
         return 1
     fi
 
-    for sysname in "${sysnames[@]}"; do
-        if ! name="$(
+    for kernel_name in "${kernel_names[@]}"; do
+        if ! display_name_queried="$(
             "${QDBUS:-qdbus}" \
                 org.kde.KWin \
-                "/org/kde/KWin/InputDevice/${sysname}" \
+                "/org/kde/KWin/InputDevice/${kernel_name}" \
                 org.freedesktop.DBus.Properties.Get \
                 org.kde.KWin.InputDevice \
                 name
             )"; then
             printf \
                 'Error: Unable to query the display name of the "%s" input device.\n' \
-                "${sysname}" \
+                "${kernel_name}" \
                 1>&2
             return 1
         fi
 
-        if test "${display_name}" == "${name}"; then
+        if test "${display_name_queried}" == "${display_name}"; then
             # Matching device found
-            echo "${sysname}"
+            echo "${kernel_name}"
             return 0
         fi
     done
@@ -102,8 +102,8 @@ get_input_device_sysfs_name(){
 
 # List input devices managed by kwin
 list_devices() {
-    local sysnames_raw
-    if ! sysnames_raw="$(
+    local kernel_names_raw
+    if ! kernel_names_raw="$(
         "${QDBUS:-qdbus}" \
             org.kde.KWin \
             /org/kde/KWin/InputDevice \
@@ -111,40 +111,40 @@ list_devices() {
             org.kde.KWin.InputDeviceManager \
             devicesSysNames
         )"; then
-        printf 'Error: Unable to query the sysfs names of the kwin input devices.\n' 1>&2
+        printf 'Error: Unable to query the kernel names of the kwin input devices.\n' 1>&2
         return 1
     fi
 
-    if ! mapfile -t sysnames <<<"${sysnames_raw}"; then
-        printf 'Error: Unable to load the sysnames array.\n' 1>&2
+    if ! mapfile -t kernel_names <<<"${kernel_names_raw}"; then
+        printf 'Error: Unable to load the kernel_names array.\n' 1>&2
         return 1
     fi
 
     local enabled
-    printf 'enabled?\tsysfs name\t"display name"\n'
-    for sysname in "${sysnames[@]}"; do
-        if ! name="$(
+    printf 'enabled?\tkernel name\t"display name"\n'
+    for kernel_name in "${kernel_names[@]}"; do
+        if ! display_name="$(
             "${QDBUS:-qdbus}" \
                 org.kde.KWin \
-                "/org/kde/KWin/InputDevice/${sysname}" \
+                "/org/kde/KWin/InputDevice/${kernel_name}" \
                 org.freedesktop.DBus.Properties.Get \
                 org.kde.KWin.InputDevice \
                 name
             )"; then
             printf \
                 'Error: Unable to query the display name of the "%s" input device.\n' \
-                "${sysname}" \
+                "${kernel_name}" \
                 1>&2
             return 1
         fi
 
-        if ! enabled="$(is_input_device_enabled "${sysname}")"; then
-            printf 'Error: Unable to query the enabled status of the "%s" input device.' "${sysname}" 1>&2
+        if ! enabled="$(is_input_device_enabled "${kernel_name}")"; then
+            printf 'Error: Unable to query the enabled status of the "%s" input device.' "${kernel_name}" 1>&2
             return 1
         fi
 
         # NOTE: The bash built-in printf doesn't not print pretty quoted strings, use the one from coreutils instead.
-        env printf '%s\t\t%s\t\t%q\n' "${enabled}" "${sysname}" "${name}"
+        env printf '%s\t\t%s\t\t%q\n' "${enabled}" "${kernel_name}" "${display_name}"
     done
 }
 
@@ -162,18 +162,18 @@ list_devices() {
 is_input_device_exists(){
     local device="${1}"; shift
 
-    local sysfs_name
-    if ! is_input_device_sysfs_name "${device}"; then
-        if ! sysfs_name="$(get_input_device_sysfs_name "${device}")" \
+    local kernel_name
+    if ! is_input_device_kernel_name "${device}"; then
+        if ! kernel_name="$(get_input_device_kernel_name "${device}")" \
             && test "${?}" -eq 1; then
             printf \
-                'Error: Unable to query the sysfs name of the "%s" input device.\n' \
+                'Error: Unable to query the kernel name of the "%s" input device.\n' \
                 "${device}" \
                 1>&2
             return 2
         fi
 
-        if test -z "${sysfs_name}"; then
+        if test -z "${kernel_name}"; then
             printf 'false\n'
             return 0
         else
@@ -181,10 +181,10 @@ is_input_device_exists(){
             return 0
         fi
     else
-        sysfs_name="${device}"
+        kernel_name="${device}"
 
-        local sysnames_raw
-        if ! sysnames_raw="$(
+        local kernel_names_raw
+        if ! kernel_names_raw="$(
             "${QDBUS:-qdbus}" \
                 org.kde.KWin \
                 /org/kde/KWin/InputDevice \
@@ -192,17 +192,17 @@ is_input_device_exists(){
                 org.kde.KWin.InputDeviceManager \
                 devicesSysNames
             )"; then
-            printf 'Error: Unable to query the sysfs names of the kwin input devices.\n' 1>&2
+            printf 'Error: Unable to query the kernel names of the kwin input devices.\n' 1>&2
             return 1
         fi
 
-        if ! mapfile -t sysnames <<<"${sysnames_raw}"; then
-            printf 'Error: Unable to load the sysnames array.\n' 1>&2
+        if ! mapfile -t kernel_names <<<"${kernel_names_raw}"; then
+            printf 'Error: Unable to load the kernel_names array.\n' 1>&2
             return 1
         fi
 
-        for name in "${sysnames[@]}"; do
-            if test "${name}" == "${sysfs_name}"; then
+        for name in "${kernel_names[@]}"; do
+            if test "${name}" == "${kernel_name}"; then
                 printf 'true\n'
                 return 0
             fi
@@ -226,24 +226,24 @@ is_input_device_exists(){
 is_input_device_enabled(){
     local device="${1}"; shift
 
-    local sysfs_name
-    if ! is_input_device_sysfs_name "${device}"; then
-        if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
+    local kernel_name
+    if ! is_input_device_kernel_name "${device}"; then
+        if ! kernel_name="$(get_input_device_kernel_name "${device}")"; then
             printf \
-                'Error: Unable to query the sysfs name of the "%s" input device.\n' \
+                'Error: Unable to query the kernel name of the "%s" input device.\n' \
                 "${device}" \
                 1>&2
             return 2
         fi
     else
-        sysfs_name="${device}"
+        kernel_name="${device}"
     fi
 
     local result
     if ! result="$(
         "${QDBUS:-qdbus}" \
             org.kde.KWin \
-            "/org/kde/KWin/InputDevice/${sysfs_name}" \
+            "/org/kde/KWin/InputDevice/${kernel_name}" \
             org.freedesktop.DBus.Properties.Get \
                 org.kde.KWin.InputDevice \
                 enabled
@@ -277,7 +277,7 @@ is_input_device_enabled(){
 # * 0: Operation successful.
 # * 2: Generic error.
 toggle_device() {
-    # The sysfs or display name of the input device to toggle the enabled status, e.g.: event2
+    # The kernel or display name of the input device to toggle the enabled status, e.g.: event2
     local device="${1}"; shift
 
     local enabled
@@ -317,24 +317,24 @@ toggle_device() {
     return 0
 }
 
-# Determine whether the supplied string is a sysfs name of a input device
+# Determine whether the supplied string is a kernel name of a input device
 #
 # Return values:
 #
-# * 0: Is sysfs name
-# * 1: Not sysfs name
-is_input_device_sysfs_name(){
+# * 0: Is kernel name
+# * 1: Not kernel name
+is_input_device_kernel_name(){
     local device="${1}"; shift
 
-    local regex_sysfs_names='^event[[:digit:]]+$'
-    if [[ "${device}" =~ ${regex_sysfs_names} ]]; then
+    local regex_kernel_names='^event[[:digit:]]+$'
+    if [[ "${device}" =~ ${regex_kernel_names} ]]; then
         return 0
     else
         return 1
     fi
 }
 
-# Enable a input device by its sysfs name or its display name
+# Enable a input device by its kernel name or its display name
 #
 # Environment variables:
 #
@@ -350,21 +350,21 @@ enable_device(){
     printf \
         'Info: Enabling the "%s" input device...\n' \
         "${device}"
-    if ! is_input_device_sysfs_name "${device}"; then
-        if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
+    if ! is_input_device_kernel_name "${device}"; then
+        if ! kernel_name="$(get_input_device_kernel_name "${device}")"; then
             printf \
-                'Error: Unable to query the sysfs name of the "%s" input device.\n' \
+                'Error: Unable to query the kernel name of the "%s" input device.\n' \
                 "${device}" \
                 1>&2
             return 2
         fi
     else
-        sysfs_name="${device}"
+        kernel_name="${device}"
     fi
 
     if ! "${QDBUS:-qdbus}" \
         org.kde.KWin \
-        "/org/kde/KWin/InputDevice/${sysfs_name}" \
+        "/org/kde/KWin/InputDevice/${kernel_name}" \
         org.freedesktop.DBus.Properties.Set \
             org.kde.KWin.InputDevice \
             enabled \
@@ -379,7 +379,7 @@ enable_device(){
     return 0
 }
 
-# Disable a input device by its sysfs name or its display name
+# Disable a input device by its kernel name or its display name
 #
 # Environment variables:
 #
@@ -395,21 +395,21 @@ disable_device(){
     printf \
         'Info: Disabling the "%s" input device...\n' \
         "${device}"
-    if ! is_input_device_sysfs_name "${device}"; then
-        if ! sysfs_name="$(get_input_device_sysfs_name "${device}")"; then
+    if ! is_input_device_kernel_name "${device}"; then
+        if ! kernel_name="$(get_input_device_kernel_name "${device}")"; then
             printf \
-                'Error: Unable to query the sysfs name of the "%s" input device.\n' \
+                'Error: Unable to query the kernel name of the "%s" input device.\n' \
                 "${device}" \
                 1>&2
             return 2
         fi
     else
-        sysfs_name="${device}"
+        kernel_name="${device}"
     fi
 
     if ! "${QDBUS:-qdbus}" \
         org.kde.KWin \
-        "/org/kde/KWin/InputDevice/${sysfs_name}" \
+        "/org/kde/KWin/InputDevice/${kernel_name}" \
         org.freedesktop.DBus.Properties.Set \
             org.kde.KWin.InputDevice \
             enabled \
@@ -439,7 +439,7 @@ case "${operation_mode}" in
                 "${script_basecommand}" \
                 1>&2
             printf \
-                '\n_input_device_ can be its sysfs name or display name.\n' \
+                '\n_input_device_ can be its kernel name or display name.\n' \
                 1>&2
             exit 1
         fi
@@ -462,7 +462,7 @@ case "${operation_mode}" in
                 "${script_basecommand}" \
                 1>&2
             printf \
-                '\n_input_device_ can be its sysfs name or display name.\n' \
+                '\n_input_device_ can be its kernel name or display name.\n' \
                 1>&2
             exit 1
         fi
@@ -581,7 +581,7 @@ case "${operation_mode}" in
                 "${script_basecommand}" \
                 1>&2
             printf \
-                '\n_input_device_ can be its sysfs name or display name.\n' \
+                '\n_input_device_ can be its kernel name or display name.\n' \
                 1>&2
             exit 1
         fi
@@ -605,7 +605,7 @@ case "${operation_mode}" in
                 "${script_basecommand}" \
                 1>&2
             printf \
-                '\n_input_device_ can be its sysfs name or display name.\n' \
+                '\n_input_device_ can be its kernel name or display name.\n' \
                 1>&2
             exit 1
         fi
