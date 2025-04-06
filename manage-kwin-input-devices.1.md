@@ -33,7 +33,7 @@ The display name column is formatted in a way that can be directly used as argum
 ### status
 
 ```bash
-manage-kwin-input-devices _device_...
+manage-kwin-input-devices status _device_...
 ```
 
 This operation mode queries the specified input devices' enabled statuses.
