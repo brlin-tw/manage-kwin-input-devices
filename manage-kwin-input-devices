@@ -40,12 +40,6 @@ if ! set -eEu; then
     exit 2
 fi
 
-script_basecommand="${0}"
-if test "${#}" -lt 1; then
-    printf 'Usage: %s _operation_mode_ _operation_args_...\n' "${script_basecommand}" 1>&2
-    exit 1
-fi
-
 # Query input device's sysfs name from it's display name
 #
 # Environment variables:
@@ -429,6 +423,12 @@ disable_device(){
 
     return 0
 }
+
+script_basecommand="${0}"
+if test "${#}" -lt 1; then
+    printf 'Usage: %s _operation_mode_ _operation_args_...\n' "${script_basecommand}" 1>&2
+    exit 1
+fi
 
 operation_mode="${1}"; shift 1
 case "${operation_mode}" in
