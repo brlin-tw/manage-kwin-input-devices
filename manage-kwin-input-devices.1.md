@@ -20,6 +20,16 @@ manage-kwin-input-devices _operation_mode_ _operation_args_...
 
 This section documents the supported commands and their arguments of this command:
 
+### help
+
+```bash
+manage-kwin-input-devices help
+```
+
+This operation mode prints help text of the utility.
+
+The `--help` and `-h` command arguments also work as long as it is the first command argument.
+
 ### list
 
 ```bash

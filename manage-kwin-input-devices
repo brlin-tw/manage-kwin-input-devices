@@ -424,14 +424,37 @@ disable_device(){
     return 0
 }
 
+print_help(){
+    local basecommand="${1}"; shift
+
+    printf 'Usage: %s _operation_mode_ _operation_args_...\n\n' "${basecommand}"
+    printf 'Supported operation modes:\n\n'
+    printf '* list\n'
+    printf '* status\n'
+    printf '* enable\n'
+    printf '* disable\n'
+    printf '* toggle\n'
+    printf '* enable-from-file\n'
+    printf '* disable-from-file\n'
+    printf '* toggle-from-file\n'
+    printf '\n'
+    # This is not a command substitution syntax
+    # shellcheck disable=SC2016
+    printf 'Run `%s _operation_mode_` for help text of each supported operations.\n' "${basecommand}"
+}
+
 script_basecommand="${0}"
 if test "${#}" -lt 1; then
-    printf 'Usage: %s _operation_mode_ _operation_args_...\n' "${script_basecommand}" 1>&2
+    print_help "${script_basecommand}" 1>&2
     exit 1
 fi
 
 operation_mode="${1}"; shift 1
 case "${operation_mode}" in
+    -h|--help|help)
+        print_help "${script_basecommand}"
+        exit 0
+    ;;
     enable)
         if test "${#}" -eq 0; then
             printf \
@@ -659,7 +682,13 @@ case "${operation_mode}" in
         fi
     ;;
     *)
-        printf 'Error: Unsupported operation mode "%s".\n' "${operation_mode}" 1>&2
+        # This is not a command substitution syntax
+        # shellcheck disable=SC2016
+        printf \
+            'Error: Unsupported operation mode "%s", run `%s help` for more information.\n' \
+            "${operation_mode}" \
+            "${script_basecommand}" \
+            1>&2
         exit 1
     ;;
 esac
