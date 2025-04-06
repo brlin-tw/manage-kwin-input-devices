@@ -30,6 +30,16 @@ This operation mode lists existing input devices, their sysfs names, and their e
 
 The display name column is formatted in a way that can be directly used as arguments of the enable/disable/toggle operation modes.
 
+### status
+
+```bash
+manage-kwin-input-devices _device_...
+```
+
+This operation mode queries the specified input devices' enabled statuses.
+
+The output of this command is guaranteed to be machine-parsible though there are different output formats between specifying single/multiple input devices.
+
 ### enable
 
 ```bash
