@@ -40,7 +40,7 @@ if ! set -eEu; then
     exit 2
 fi
 
-# Query input device's sysfs name from it's display name
+# Query input device's sysfs name from its display name
 #
 # Environment variables:
 #
