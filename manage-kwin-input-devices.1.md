@@ -26,7 +26,7 @@ This section documents the supported commands and their arguments of this comman
 manage-kwin-input-devices list
 ```
 
-This operation mode lists existing input devices, their sysfs names, and their enabled statuses.
+This operation mode lists existing input devices, their kernel names, and their enabled statuses.
 
 The display name column is formatted in a way that can be directly used as arguments of the enable/disable/toggle operation modes.
 
@@ -48,7 +48,7 @@ manage-kwin-input-devices enable _device_...
 
 This operation mode enables user-specified input devices.
 
-You can either use the input devices' sysfs names or display names.
+You can either use the input devices' kernel names or display names.
 
 ### disable
 
@@ -58,7 +58,7 @@ manage-kwin-input-devices disable _device_...
 
 This operation mode disables user-specified input devices.
 
-You can either use the input devices' sysfs names or display names.
+You can either use the input devices' kernel names or display names.
 
 ### toggle
 
@@ -68,7 +68,7 @@ manage-kwin-input-devices toggle _device_...
 
 This operation mode enables user-specified disabled input devices, and vice-versa.
 
-You can either use the input devices' sysfs names or display names.
+You can either use the input devices' kernel names or display names.
 
 ### enable-from-file
 

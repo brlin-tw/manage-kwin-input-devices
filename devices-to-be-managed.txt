@@ -1,4 +1,4 @@
-# The input device display names(or sysfs names) to be managed by the utility, without any shell quotings.
+# The input device display names(or kernel names) to be managed by the utility, without any shell quotings.
 #
 # You may check out the names usable by running the `manage-kwin-input-devices list` command in a text terminal.
 #
