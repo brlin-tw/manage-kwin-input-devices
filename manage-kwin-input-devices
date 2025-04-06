@@ -643,6 +643,14 @@ case "${operation_mode}" in
         fi
     ;;
     list)
+        if test "${#}" -ne 0; then
+            printf \
+                'Usage: %s list\n' \
+                "${script_basecommand}" \
+                1>&2
+            exit 1
+        fi
+
         if ! list_devices; then
             printf \
                 'Error: Unable to list kwin-managed input devices.\n' \
