@@ -7,6 +7,9 @@
 asus_numpad
 ASUE140D:00 04F3:31B9 Touchpad
 
+# Touchpad of an ASUS laptop
+ASUE120B:00 04F3:31C0 Touchpad
+
 # Common name for laptop integrated keyboards
 AT Translated Set 2 keyboard
 
