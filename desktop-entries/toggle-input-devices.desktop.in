@@ -3,10 +3,10 @@
 # Copyright 2025 Buo-ren Lin <buo.ren.lin@gmail.com>
 # SPDX-License-Identifier: MIT
 [Desktop Entry]
-Name[zh_TW]=切換輸入裝置啟/停用
 Name=Toggle input devices active/inactive
-Comment[zh_TW]=切換預定義輸入設備的啟用狀態。
+Name[zh_TW]=切換輸入裝置啟/停用
 Comment=Toggle active state of pre-defined input devices.
+Comment[zh_TW]=切換預定義輸入設備的啟用狀態。
 Type=Application
 Categories=Utility;HardwareSettings;
 Icon=preferences-desktop-keyboard
