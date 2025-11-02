@@ -31,6 +31,19 @@ Refer to the following instructions to use this utility:
 
    Replace the `/path/to/manage-kwin-input-devices-X.Y.Z/manage-kwin-input-devices`, the `_operation_mode_` and the `_arguments_` placeholder text to their respective values.  Refer to [the manual page](manage-kwin-input-devices.1.md) for more information.
 
+   You may customize the utility's behaviors by setting environment variables.  Refer to the following section for more information.
+
+### Environment variables that can customize the utility's behaviors
+
+The following environment variables can be set to customize the utility's behaviors:
+
+#### QDBUS
+
+The qdbus command to use.
+
+**Default value:** `qdbus`  
+**Example value:** `qdbus6`
+
 ## Credits
 
 This project is based on [Amine Hassane](https://gist.github.com/Sporif)'s work: [Enable or disable input devices on KDE](https://gist.github.com/Sporif/0e52e4b0eaf071cfbf19f3381ba3d65a).
