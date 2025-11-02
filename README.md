@@ -48,6 +48,15 @@ The qdbus command to use.
 
 This project is based on [Amine Hassane](https://gist.github.com/Sporif)'s work: [Enable or disable input devices on KDE](https://gist.github.com/Sporif/0e52e4b0eaf071cfbf19f3381ba3d65a).
 
+## References
+
+* [Registered Categories | Desktop Menu Specification](https://specifications.freedesktop.org/menu/latest/category-registry.html)  
+  Explains the main categories for XDG desktop entries.
+* [Additional Categories | Desktop Menu Specification](https://specifications.freedesktop.org/menu/latest/additional-category-registry.html)  
+  Explains the additional categories for XDG desktop entries.
+* [Recognized desktop entry keys | Desktop Entry Specification](https://specifications.freedesktop.org/desktop-entry/latest/recognized-keys.html)  
+  Explains the purpose of the `Type` key for XDG desktop entries.
+
 ## Licensing
 
 Unless otherwise noted([comment headers](https://reuse.software/spec-3.3/#comment-headers)/[REUSE.toml](https://reuse.software/spec-3.3/#reusetoml)), this product is licensed under [The MIT License](https://opensource.org/license/mit).

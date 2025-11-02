@@ -1,0 +1,14 @@
+# XDG desktop entry for the "toggle-input-devices" action of the "manage-kwin-input-devices" utility
+#
+# Copyright 2025 Buo-ren Lin <buo.ren.lin@gmail.com>
+# SPDX-License-Identifier: MIT
+[Desktop Entry]
+Name[zh_TW]=切換輸入裝置啟/停用
+Name=Toggle input devices active/inactive
+Comment[zh_TW]=切換預定義輸入設備的啟用狀態。
+Comment=Toggle active state of pre-defined input devices.
+Type=Application
+Categories=Utility;HardwareSettings;
+Icon=preferences-desktop-keyboard
+StartupNotify=true
+Exec=env QDBUS=qdbus6 /home/brlin/文件/manage-kwin-input-devices/manage-kwin-input-devices toggle-from-file _builtin_
